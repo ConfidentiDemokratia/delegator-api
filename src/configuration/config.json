@@ -1,0 +1,4 @@
+{
+    "onnx_model_pt": "./models/model.onnx",
+    "torch_model_pt": "./models/model.pth"
+}
