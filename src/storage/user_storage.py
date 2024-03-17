@@ -14,4 +14,4 @@ class UserStorage:
 
     def get_embedding(self, address: str) -> List[float]:
         logger.info(f"retrieving embedding for address: {address}")
-        return self.address_to_embedding(address, [0.0] * 384)
+        return self.address_to_embedding.get(address, [0.0] * 384)

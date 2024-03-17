@@ -1,6 +1,9 @@
 import json
 from typing import List
 
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
 from flask import Flask, jsonify, request
 from loguru import logger
 
@@ -8,13 +11,7 @@ from predictions.predictor import Predictor
 from storage.proposal_storage import ProposalStorage
 from storage.user_storage import UserStorage
 
-
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-
-
-PORT = 8080
+PORT = 80
 
 
 class Model(nn.Module):
@@ -62,12 +59,11 @@ def predict():
     logger.info("make predictions")
     user_embedding = user_storage.get_embedding(data["address"])
     proposal_embedding = proposal_storage.get_embedding(data["proposal_id"])
+    # make predictions
     prediction = predictor.predict(user_embedding, proposal_embedding)
-    try:
-        return jsonify({'prediction': prediction}), 200
-    except Exception as e:
-        logger.error(f"Unable to predict: {e}")
-        return jsonify({'error': f'An error occurred: {str(e)}'}), 500
+    # send predictions
+    submit_prediction(address, prediction["prediction"], prediction["proof"])
+    return jsonify({}), 201
 
 
 # save user embedding
@@ -80,8 +76,7 @@ def save_user_embedding():
     assert "address" in data.keys()
     assert "user_embedding" in data.keys()
     assert isinstance(data["address"], str)
-    assert isinstance(data["user_embedding"], List[float])
-
+    print(f"user_embedding: {data['user_embedding']}")
     # save embedding
     logger.info("saving user embedding")
     try:
@@ -102,7 +97,6 @@ def save_proposal_embedding():
     assert "proposal_id" in data.keys()
     assert "proposal_embedding" in data.keys()
     assert isinstance(data["address"], int)
-    assert isinstance(data["user_embedding"], List[float])
 
     # save embedding
     logger.info("saving proposal embedding")
